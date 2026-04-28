@@ -918,7 +918,7 @@ function normalizeRound(row, holes){
 }
 
 async function loadRoundsFromSupabase(){
-  const { data: roundRows, error: roundsError } = await supabase
+  const { data: roundRows, error: roundsError } = await sb
     .from('rounds')
     .select('*')
     .eq('profile_key', PROFILE_KEY)
@@ -929,7 +929,7 @@ async function loadRoundsFromSupabase(){
     return [];
   }
 
-  const { data: holeRows, error: holesError } = await supabase
+  const { data: holeRows, error: holesError } = await sb
     .from('round_holes')
     .select('*')
     .eq('profile_key', PROFILE_KEY);
@@ -960,7 +960,7 @@ async function saveRoundToSupabase(round){
     return false;
   }
 
-  const { error: deleteError } = await supabase
+  const { error: deleteError } = await sb
     .from('round_holes')
     .delete()
     .eq('round_id', round.id)
@@ -1005,7 +1005,7 @@ async function deleteRoundFromSupabase(roundId){
     return false;
   }
 
-  const { error: roundDeleteError } = await supabase
+  const { error: roundDeleteError } = await sb
     .from('rounds')
     .delete()
     .eq('id', roundId)
