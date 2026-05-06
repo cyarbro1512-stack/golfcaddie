@@ -502,7 +502,7 @@ td:first-child,th:first-child{text-align:left;padding-left:.6rem}
     <div style="display:flex;gap:.45rem;flex-wrap:wrap;align-items:center;justify-content:space-between" id="roundsFilters">
       <div style="display:flex;gap:.45rem;flex-wrap:wrap">
         <button class="btn btn-sm btn-secondary active-filter" data-filter="all">All</button>
-        <button class="btn btn-sm btn-secondary" data-filter="complete">Complete</button>
+        <button class="btn btn-sm btn-secondary" data-filter="complete">Completed</button>
         <button class="btn btn-sm btn-secondary" data-filter="in-progress">In Progress</button>
       </div>
       <div style="display:flex;gap:.35rem">
@@ -886,9 +886,9 @@ const MOCK_ROUNDS = [
 
 /* ─── SUPABASE ──────────────────────────────────────────────────────── */
 const SUPABASE_URL = 'https://kdqpsncrpyrsotwmrlue.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_zKKYzrKLiN8o1pSnM3jW7w_L0iM9kXt';
+const SUPABASE_ANON_KEY = 'CY1512';
 const PROFILE_KEY = 'CY1512';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function normalizeHoleRow(found, par){
   return found ? {
@@ -918,7 +918,7 @@ function normalizeRound(row, holes){
 }
 
 async function loadRoundsFromSupabase(){
-  const { data: roundRows, error: roundsError } = await sb
+  const { data: roundRows, error: roundsError } = await supabase
     .from('rounds')
     .select('*')
     .eq('profile_key', PROFILE_KEY)
@@ -929,7 +929,7 @@ async function loadRoundsFromSupabase(){
     return [];
   }
 
-  const { data: holeRows, error: holesError } = await sb
+  const { data: holeRows, error: holesError } = await supabase
     .from('round_holes')
     .select('*')
     .eq('profile_key', PROFILE_KEY);
@@ -953,14 +953,14 @@ async function saveRoundToSupabase(round){
     status: round.status === 'in-progress' ? 'in_progress' : 'complete'
   };
 
-  const { error: roundError } = await sb.from('rounds').upsert(payload);
+  const { error: roundError } = await supabase.from('rounds').upsert(payload);
   if(roundError){
     console.error('Error saving round:', roundError);
     alert('Could not save round to Supabase.');
     return false;
   }
 
-  const { error: deleteError } = await sb
+  const { error: deleteError } = await supabase
     .from('round_holes')
     .delete()
     .eq('round_id', round.id)
@@ -983,7 +983,7 @@ async function saveRoundToSupabase(round){
     first_putt_dist: Number(h.firstPuttDist ?? 3)
   }));
 
-  const { error: holesError } = await sb.from('round_holes').insert(holePayload);
+  const { error: holesError } = await supabase.from('round_holes').insert(holePayload);
   if(holesError){
     console.error('Error saving round holes:', holesError);
     alert('Could not save hole data to Supabase.');
@@ -1005,7 +1005,7 @@ async function deleteRoundFromSupabase(roundId){
     return false;
   }
 
-  const { error: roundDeleteError } = await sb
+  const { error: roundDeleteError } = await supabase
     .from('rounds')
     .delete()
     .eq('id', roundId)
@@ -1031,7 +1031,7 @@ async function seedCoursesToSupabase(){
     holes: c.holes,
     sort_order: idx
   }));
-  const { error } = await sb.from('courses').upsert(payload);
+  const { error } = await supabase.from('courses').upsert(payload);
   if(error) console.error('Error seeding courses:', error);
 }
 
@@ -1125,7 +1125,7 @@ function statBox(label, value, foot=''){
 }
 
 function emptyHole(par){
-  return { score:null, putts:2, penalties:0, fir:par>3?'yes':'na', gir:'yes', firstPuttDist:3 };
+  return { score:par, putts:2, penalties:0, fir:par>3?'yes':'na', gir:'yes', firstPuttDist:3 };
 }
 
 function todayStr(){ return new Date().toISOString().slice(0,10); }
@@ -1205,7 +1205,7 @@ function renderDashboard(){
       recent.map(r=>{
         const t = roundTotals(r);
         const statusPill = r.status==='complete'
-          ? `<span class="pill pill-good">Complete</span>`
+          ? `<span class="pill pill-good">Completed</span>`
           : `<span class="pill pill-warn">Draft</span>`;
         return `<div class="list-item" data-round="${r.id}">
           <div class="list-row">
@@ -1408,7 +1408,7 @@ function bindRoundActions(el){
 function roundCardHTML(r){
   const t = roundTotals(r);
   const statusPill = r.status==='complete'
-    ? `<span class="pill pill-good">Complete</span>`
+    ? `<span class="pill pill-good">Completed</span>`
     : `<span class="pill pill-warn">Draft</span>`;
   const rel = t.total - t.par;
   return `<div class="list-item" style="gap:.55rem">
@@ -1696,7 +1696,7 @@ function renderSummary(){
 
   const sp = document.getElementById('summaryStatusPill');
   sp.className = `pill ${isComplete?'pill-good':'pill-warn'}`;
-  sp.textContent = isComplete ? 'Complete' : 'Draft';
+  sp.textContent = isComplete ? 'Completed' : 'Draft';
 
   document.getElementById('summaryStats').innerHTML = [
     statBox('Total Score', `${t.total} (${rel>=0?'+':''}${rel})`),
@@ -1806,7 +1806,7 @@ function renderSummary(){
   document.getElementById('backFromSummaryLabel').textContent = backMap[state.summaryFromView]||'Back';
 
   // Complete/edit button visibility
-  document.getElementById('summaryCompleteBtn').textContent = isComplete ? '✓ Completed' : 'Mark Complete';
+  document.getElementById('summaryCompleteBtn').textContent = isComplete ? '✓ Completed' : 'Mark Completed';
   document.getElementById('summaryCompleteBtn').disabled = isComplete;
 }
 
@@ -2212,7 +2212,7 @@ function bindUI(){
   };
 
   // Back buttons
-  document.getElementById('backFromCourseDetail').onclick=()=>showView('courses');
+  document.getElementById('backFromCourseDetail').onclick=()=>{ renderCourses(); showView('courses'); };
   document.getElementById('backFromSummary').onclick=()=>{
     showView(state.summaryFromView || 'rounds');
     if(state.summaryFromView==='rounds') renderRounds();
