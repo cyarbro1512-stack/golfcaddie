@@ -888,7 +888,7 @@ const MOCK_ROUNDS = [
 const SUPABASE_URL = 'https://kdqpsncrpyrsotwmrlue.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_zKKYzrKLiN8o1pSnM3jW7w_L0iM9kXt';
 const PROFILE_KEY = 'CY1512';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function normalizeHoleRow(found, par){
   return found ? {
@@ -918,7 +918,7 @@ function normalizeRound(row, holes){
 }
 
 async function loadRoundsFromSupabase(){
-  const { data: roundRows, error: roundsError } = await supabase
+  const { data: roundRows, error: roundsError } = await sp
     .from('rounds')
     .select('*')
     .eq('profile_key', PROFILE_KEY)
@@ -929,7 +929,7 @@ async function loadRoundsFromSupabase(){
     return [];
   }
 
-  const { data: holeRows, error: holesError } = await supabase
+  const { data: holeRows, error: holesError } = await sb
     .from('round_holes')
     .select('*')
     .eq('profile_key', PROFILE_KEY);
@@ -953,14 +953,14 @@ async function saveRoundToSupabase(round){
     status: round.status === 'in-progress' ? 'in_progress' : 'complete'
   };
 
-  const { error: roundError } = await supabase.from('rounds').upsert(payload);
+  const { error: roundError } = await sb.from('rounds').upsert(payload);
   if(roundError){
     console.error('Error saving round:', roundError);
     alert('Could not save round to Supabase.');
     return false;
   }
 
-  const { error: deleteError } = await supabase
+  const { error: deleteError } = await sb
     .from('round_holes')
     .delete()
     .eq('round_id', round.id)
@@ -983,7 +983,7 @@ async function saveRoundToSupabase(round){
     first_putt_dist: Number(h.firstPuttDist ?? 3)
   }));
 
-  const { error: holesError } = await supabase.from('round_holes').insert(holePayload);
+  const { error: holesError } = await sb.from('round_holes').insert(holePayload);
   if(holesError){
     console.error('Error saving round holes:', holesError);
     alert('Could not save hole data to Supabase.');
@@ -994,7 +994,7 @@ async function saveRoundToSupabase(round){
 }
 
 async function deleteRoundFromSupabase(roundId){
-  const { error: holesDeleteError } = await supabase
+  const { error: holesDeleteError } = await sb
     .from('round_holes')
     .delete()
     .eq('round_id', roundId)
@@ -1005,7 +1005,7 @@ async function deleteRoundFromSupabase(roundId){
     return false;
   }
 
-  const { error: roundDeleteError } = await supabase
+  const { error: roundDeleteError } = await sb
     .from('rounds')
     .delete()
     .eq('id', roundId)
@@ -1031,7 +1031,7 @@ async function seedCoursesToSupabase(){
     holes: c.holes,
     sort_order: idx
   }));
-  const { error } = await supabase.from('courses').upsert(payload);
+  const { error } = await sb.from('courses').upsert(payload);
   if(error) console.error('Error seeding courses:', error);
 }
 
